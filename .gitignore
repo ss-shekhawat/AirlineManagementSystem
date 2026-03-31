@@ -1,0 +1,52 @@
+# Java compiled files
+*.class
+*.jar
+*.war
+*.ear
+target/
+build/
+out/
+bin/
+
+# IDE files
+.idea/
+*.iml
+.vscode/
+.settings/
+.classpath
+.project
+*.swp
+*.swo
+
+# Frontend dependencies
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Environment files
+.env
+.env.local
+```
+
+**3. Structure Your Repository**
+
+Organize it like this:
+```
+your-project/
+├── backend/          # Your Java project
+│   ├── src/
+│   ├── pom.xml (or build.gradle)
+│   └── ...
+├── frontend/         # Your frontend folder
+│   ├── src/
+│   ├── package.json
+│   └── ...
+├── .gitignore
+└── README.md
