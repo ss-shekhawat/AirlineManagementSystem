@@ -1,0 +1,601 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Booking Details</title>
+    <link rel="stylesheet" href="../css/style.css" />
+    <link rel="stylesheet" href="../css/admin-layout.css" />
+
+    <style>
+      .box {
+        background: white;
+        margin: 30px;
+        padding: 25px;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      }
+
+      .title {
+        text-align: center;
+        font-weight: bold;
+        border-bottom: 2px dashed #999;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+      }
+
+      .toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 18px;
+        flex-wrap: wrap;
+      }
+
+      .toolbar-left {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+
+      .filter-label {
+        font-weight: bold;
+        color: #333;
+      }
+
+      .info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px 28px;
+        margin-bottom: 25px;
+      }
+
+      .info-card {
+        background: #f8f9fa;
+        padding: 14px;
+        border-radius: 8px;
+      }
+
+      .info-card strong {
+        display: inline-block;
+        min-width: 130px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      th,
+      td {
+        padding: 10px;
+        text-align: center;
+        border-bottom: 1px solid #ddd;
+      }
+
+      th {
+        background: #0d6efd;
+        color: white;
+      }
+
+      tr:hover {
+        background: #f1f1f1;
+      }
+
+      .btn {
+        padding: 8px 14px;
+        border: none;
+        cursor: pointer;
+        border-radius: 5px;
+        font-size: 12px;
+        font-weight: bold;
+      }
+
+      .btn-refresh {
+        background: green;
+        color: white;
+      }
+
+      .btn-filter {
+        background: orange;
+        color: white;
+      }
+
+      .btn-view {
+        background: #0d6efd;
+        color: white;
+      }
+
+      .btn-edit {
+        background: #198754;
+        color: white;
+      }
+
+      .btn-exit {
+        background: gray;
+        color: white;
+      }
+
+      .row-actions {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .actions {
+        text-align: center;
+        margin-top: 20px;
+      }
+
+      .empty-state {
+        padding: 20px;
+        color: #666;
+        font-weight: bold;
+        text-align: center;
+      }
+
+      .modal {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+
+      .modal.show {
+        display: flex;
+      }
+
+      .modal-box {
+        width: min(520px, 100%);
+        background: white;
+        border-radius: 10px;
+        padding: 25px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+      }
+
+      .modal-title {
+        font-size: 20px;
+        font-weight: bold;
+        margin-bottom: 18px;
+      }
+
+      .detail-grid,
+      .edit-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+      }
+
+      .detail-item {
+        background: #f8f9fa;
+        padding: 12px;
+        border-radius: 8px;
+      }
+
+      .detail-item strong {
+        display: block;
+        margin-bottom: 4px;
+      }
+
+      .edit-grid label {
+        font-weight: bold;
+        text-align: left;
+        display: block;
+      }
+
+      .edit-grid input {
+        width: 100%;
+        padding: 8px;
+        margin-top: 6px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+      }
+
+      .edit-grid .full-width {
+        grid-column: 1 / -1;
+      }
+
+      .modal-actions {
+        margin-top: 20px;
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      @media (max-width: 700px) {
+        .info-grid,
+        .detail-grid,
+        .edit-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <header class="admin-header">
+      <h2>View Detailed Bookings</h2>
+      <button onclick="logout()">Logout</button>
+    </header>
+
+    <div class="box">
+      <div class="title">-------- View Tickets --------</div>
+
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <button class="btn btn-refresh" onclick="loadBookingDetails()">Refresh</button>
+          <span class="filter-label">Show:</span>
+          <button class="btn btn-filter" id="statusFilterBtn" onclick="toggleFilter()">
+            Completed
+          </button>
+        </div>
+      </div>
+
+      <div class="info-grid">
+        <div class="info-card"><strong>Booking ID:</strong> <span id="bookingId">-</span></div>
+        <div class="info-card"><strong>Origin:</strong> <span id="origin">-</span></div>
+        <div class="info-card"><strong>Passenger Name:</strong> <span id="passengerName">-</span></div>
+        <div class="info-card"><strong>Destination:</strong> <span id="destination">-</span></div>
+        <div class="info-card"><strong>Travel Date:</strong> <span id="travelDate">-</span></div>
+        <div class="info-card"><strong>Status:</strong> <span id="status">-</span></div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Opt</th>
+            <th>Ticket ID</th>
+            <th>Passenger ID</th>
+            <th>Passenger Name</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="ticketTable"></tbody>
+      </table>
+
+      <div class="actions">
+        <button class="btn btn-exit" onclick="goBack()">Exit</button>
+      </div>
+    </div>
+
+    <div class="modal" id="viewModal">
+      <div class="modal-box">
+        <div class="modal-title">Ticket Details</div>
+        <div class="detail-grid" id="viewDetails"></div>
+        <div class="modal-actions">
+          <button class="btn btn-exit" onclick="closeViewModal()">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal" id="editModal">
+      <div class="modal-box">
+        <div class="modal-title">Update Ticket Details</div>
+        <div class="edit-grid">
+          <div>
+            <label for="editBookingId">Booking ID</label>
+            <input id="editBookingId" readonly />
+          </div>
+          <div>
+            <label for="editPassengerId">Passenger ID</label>
+            <input id="editPassengerId" />
+          </div>
+          <div>
+            <label for="editFlightId">Flight ID</label>
+            <input id="editFlightId" readonly />
+          </div>
+          <div>
+            <label for="editTicketId">Ticket ID</label>
+            <input id="editTicketId" readonly />
+          </div>
+          <div>
+            <label for="editPassengerName">Passenger Name</label>
+            <input id="editPassengerName" />
+          </div>
+          <div>
+            <label for="editOrigin">Origin</label>
+            <input id="editOrigin" />
+          </div>
+          <div>
+            <label for="editDestination">Destination</label>
+            <input id="editDestination" />
+          </div>
+          <div>
+            <label for="editBookingDate">Booking Date</label>
+            <input id="editBookingDate" type="date" />
+          </div>
+          <div>
+            <label for="editDepartureDate">Departure Date</label>
+            <input id="editDepartureDate" type="date" />
+          </div>
+          <div>
+            <label for="editDepartureTime">Departure Time</label>
+            <input id="editDepartureTime" type="time" step="1" />
+          </div>
+          <div>
+            <label for="editSeatNumber">Seat Number</label>
+            <input id="editSeatNumber" />
+          </div>
+          <div>
+            <label for="editTicketPrice">Ticket Price</label>
+            <input id="editTicketPrice" type="number" />
+          </div>
+          <div class="full-width">
+            <label for="editStatus">Status</label>
+            <input id="editStatus" />
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-exit" onclick="closeEditModal()">Cancel</button>
+          <button class="btn btn-edit" onclick="saveTicketEdits()">Save</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const FILTERS = ["Completed", "Upcoming", "Cancelled"];
+
+      let currentFilterIndex = 0;
+      let currentBooking = null;
+      let ticketRows = [];
+      let selectedTicket = null;
+
+      function getStoredBooking() {
+        try {
+          return JSON.parse(localStorage.getItem("selectedBooking") || "null");
+        } catch {
+          return null;
+        }
+      }
+
+      function getValue(obj, keys, fallback = "") {
+        for (const key of keys) {
+          const value = obj?.[key];
+          if (value !== undefined && value !== null && value !== "") {
+            return value;
+          }
+        }
+        return fallback;
+      }
+
+      function normalizeStatus(status) {
+        const value = String(status || "").trim().toLowerCase();
+
+        if (value === "completed" || value === "c") {
+          return "Completed";
+        }
+        if (value === "upcoming" || value === "u" || value === "active") {
+          return "Upcoming";
+        }
+        if (value === "cancelled" || value === "canceled" || value === "x" || value === "i") {
+          return "Cancelled";
+        }
+
+        return "Upcoming";
+      }
+
+      function updateFilterButton() {
+        document.getElementById("statusFilterBtn").innerText = FILTERS[currentFilterIndex];
+      }
+
+      function buildTicketRows(booking) {
+        if (Array.isArray(booking.ticketRows) && booking.ticketRows.length > 0) {
+          return booking.ticketRows.map((ticket, index) => ({
+            opt: index + 1,
+            ticketId: getValue(ticket, ["ticketId", "tkId"], `T${String(index + 1).padStart(4, "0")}`),
+            passengerId: getValue(ticket, ["passengerId", "psgId"], `P${String(index + 1).padStart(4, "0")}`),
+            passengerName: getValue(ticket, ["passengerName", "name"], booking.passengerName || "-"),
+            flightId: getValue(ticket, ["flightId", "fltId"], booking.flightId || "-"),
+            origin: getValue(ticket, ["origin"], booking.origin || "-"),
+            destination: getValue(ticket, ["destination"], booking.destination || "-"),
+            bookingDate: getValue(
+              ticket,
+              ["bookingDate", "bkDate"],
+              getValue(booking.rawBooking, ["bookingDate", "bkDate"], "")
+            ),
+            departureDate: getValue(ticket, ["departureDate", "travelDate"], booking.travelDate || ""),
+            departureTime: getValue(
+              ticket,
+              ["departureTime", "depTime"],
+              getValue(booking.rawFlight, ["fltDepTime", "departureTime"], "")
+            ),
+            seatNumber: getValue(ticket, ["seatNumber", "seatNo"], ""),
+            ticketPrice: getValue(
+              ticket,
+              ["ticketPrice", "price", "tkPrice"],
+              getValue(booking.rawFlight, ["fltTkPrice", "ticketPrice"], "")
+            ),
+            status: normalizeStatus(
+              getValue(ticket, ["status", "ticketStatus"], booking.displayStatus || "Upcoming")
+            ),
+          }));
+        }
+
+        return [
+          {
+            opt: 1,
+            ticketId: getValue(booking.rawBooking, ["ticketId", "tkId"], "T0001"),
+            passengerId: getValue(booking.rawBooking, ["passengerId", "psgId", "usrId"], booking.customerId || "P0001"),
+            passengerName: booking.passengerName || "Passenger",
+            flightId: booking.flightId || "-",
+            origin: booking.origin || "-",
+            destination: booking.destination || "-",
+            bookingDate: getValue(booking.rawBooking, ["bookingDate", "bkDate"], ""),
+            departureDate: booking.travelDate || "",
+            departureTime: getValue(booking.rawFlight, ["fltDepTime", "departureTime"], ""),
+            seatNumber: getValue(booking.rawBooking, ["seatNumber", "seatNo"], ""),
+            ticketPrice: getValue(booking.rawFlight, ["fltTkPrice", "ticketPrice"], ""),
+            status: normalizeStatus(booking.displayStatus || "Upcoming"),
+          },
+        ];
+      }
+
+      function renderTickets() {
+        const currentFilter = FILTERS[currentFilterIndex];
+        const filteredRows = ticketRows.filter((row) => row.status === currentFilter);
+
+        if (filteredRows.length === 0) {
+          document.getElementById("ticketTable").innerHTML = `
+            <tr>
+              <td colspan="6" class="empty-state">No ${currentFilter.toLowerCase()} tickets found.</td>
+            </tr>
+          `;
+          return;
+        }
+
+        document.getElementById("ticketTable").innerHTML = filteredRows
+          .map(
+            (row, index) => `
+              <tr>
+                <td>${index + 1}</td>
+                <td>${row.ticketId}</td>
+                <td>${row.passengerId}</td>
+                <td>${row.passengerName}</td>
+                <td>${row.status}</td>
+                <td>
+                  <div class="row-actions">
+                    <button class="btn btn-view" onclick="viewTicket('${row.ticketId}')">View</button>
+                    <button class="btn btn-edit" onclick="editTicket('${row.ticketId}')">Edit</button>
+                  </div>
+                </td>
+              </tr>
+            `
+          )
+          .join("");
+      }
+
+      function loadBookingDetails() {
+        const booking = getStoredBooking();
+        currentBooking = booking;
+
+        if (!booking) {
+          document.getElementById("ticketTable").innerHTML = `
+            <tr>
+              <td colspan="6" class="empty-state">No booking selected.</td>
+            </tr>
+          `;
+          return;
+        }
+
+        document.getElementById("bookingId").innerText = booking.bookingId || "-";
+        document.getElementById("origin").innerText = booking.origin || "-";
+        document.getElementById("passengerName").innerText = booking.passengerName || "-";
+        document.getElementById("destination").innerText = booking.destination || "-";
+        document.getElementById("travelDate").innerText = booking.travelDate || "-";
+        document.getElementById("status").innerText = booking.displayStatus || "-";
+
+        ticketRows = buildTicketRows(booking);
+        renderTickets();
+      }
+
+      function toggleFilter() {
+        currentFilterIndex = (currentFilterIndex + 1) % FILTERS.length;
+        updateFilterButton();
+        renderTickets();
+      }
+
+      function getTicketById(ticketId) {
+        return ticketRows.find((row) => row.ticketId === ticketId);
+      }
+
+      function viewTicket(ticketId) {
+        const ticket = getTicketById(ticketId);
+        if (!ticket || !currentBooking) {
+          return;
+        }
+
+        document.getElementById("viewDetails").innerHTML = `
+          <div class="detail-item"><strong>Booking ID</strong>${currentBooking.bookingId || "-"}</div>
+          <div class="detail-item"><strong>Ticket ID</strong>${ticket.ticketId || "-"}</div>
+          <div class="detail-item"><strong>Passenger ID</strong>${ticket.passengerId || "-"}</div>
+          <div class="detail-item"><strong>Passenger Name</strong>${ticket.passengerName || "-"}</div>
+          <div class="detail-item"><strong>Origin</strong>${currentBooking.origin || "-"}</div>
+          <div class="detail-item"><strong>Destination</strong>${currentBooking.destination || "-"}</div>
+          <div class="detail-item"><strong>Travel Date</strong>${currentBooking.travelDate || "-"}</div>
+          <div class="detail-item"><strong>Status</strong>${ticket.status || "-"}</div>
+        `;
+
+        document.getElementById("viewModal").classList.add("show");
+      }
+
+      function closeViewModal() {
+        document.getElementById("viewModal").classList.remove("show");
+      }
+
+      function editTicket(ticketId) {
+        selectedTicket = getTicketById(ticketId);
+        if (!selectedTicket) {
+          return;
+        }
+
+        document.getElementById("editBookingId").value = currentBooking?.bookingId || "";
+        document.getElementById("editTicketId").value = selectedTicket.ticketId || "";
+        document.getElementById("editPassengerId").value = selectedTicket.passengerId || "";
+        document.getElementById("editFlightId").value = selectedTicket.flightId || "";
+        document.getElementById("editPassengerName").value = selectedTicket.passengerName || "";
+        document.getElementById("editOrigin").value = selectedTicket.origin || "";
+        document.getElementById("editDestination").value = selectedTicket.destination || "";
+        document.getElementById("editBookingDate").value = selectedTicket.bookingDate || "";
+        document.getElementById("editDepartureDate").value = selectedTicket.departureDate || "";
+        document.getElementById("editDepartureTime").value = selectedTicket.departureTime || "";
+        document.getElementById("editSeatNumber").value = selectedTicket.seatNumber || "";
+        document.getElementById("editTicketPrice").value = selectedTicket.ticketPrice || "";
+        document.getElementById("editStatus").value = selectedTicket.status || "";
+        document.getElementById("editModal").classList.add("show");
+      }
+
+      function closeEditModal() {
+        selectedTicket = null;
+        document.getElementById("editModal").classList.remove("show");
+      }
+
+      function saveTicketEdits() {
+        if (!selectedTicket) {
+          return;
+        }
+
+        selectedTicket.passengerId = document.getElementById("editPassengerId").value;
+        selectedTicket.passengerName = document.getElementById("editPassengerName").value;
+        selectedTicket.origin = document.getElementById("editOrigin").value;
+        selectedTicket.destination = document.getElementById("editDestination").value;
+        selectedTicket.bookingDate = document.getElementById("editBookingDate").value;
+        selectedTicket.departureDate = document.getElementById("editDepartureDate").value;
+        selectedTicket.departureTime = document.getElementById("editDepartureTime").value;
+        selectedTicket.seatNumber = document.getElementById("editSeatNumber").value;
+        selectedTicket.ticketPrice = document.getElementById("editTicketPrice").value;
+        selectedTicket.status = normalizeStatus(document.getElementById("editStatus").value);
+
+        if (currentBooking) {
+          currentBooking.origin = selectedTicket.origin;
+          currentBooking.destination = selectedTicket.destination;
+          currentBooking.travelDate = selectedTicket.departureDate;
+          currentBooking.passengerName = selectedTicket.passengerName;
+          currentBooking.displayStatus = selectedTicket.status;
+          currentBooking.ticketRows = ticketRows;
+          localStorage.setItem("selectedBooking", JSON.stringify(currentBooking));
+        }
+
+        closeEditModal();
+        loadBookingDetails();
+      }
+
+      function goBack() {
+        window.location.href = "airline-managebookings.html";
+      }
+
+      function logout() {
+        localStorage.clear();
+        window.location.href = "../login.html";
+      }
+
+      updateFilterButton();
+      loadBookingDetails();
+    </script>
+  </body>
+</html>

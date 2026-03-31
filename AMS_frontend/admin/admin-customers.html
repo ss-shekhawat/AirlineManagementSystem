@@ -1,0 +1,45 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Manage Airlines</title>
+    <link rel="stylesheet" href="../css/style.css" />
+    <link rel="stylesheet" href="../css/admin-layout.css" />
+  </head>
+  <body>
+    <header class="admin-header">
+      <h2>Manage Airlines</h2>
+      <button onclick="logout()">Logout</button>
+    </header>
+
+    <div class="dashboard-container">
+      <div class="card">
+        <h3>Add New Airline</h3>
+        <button onclick="location.href = 'admin-add-airline.html'">
+          Add Airline
+        </button>
+      </div>
+
+      <div class="card">
+        <h3>View All Airlines</h3>
+        <button onclick="loadAirlines()">View Airlines</button>
+      </div>
+    </div>
+
+    <div id="airlineList"></div>
+
+    <script src="../js/admin-layout.js"></script>
+    <script>
+      function loadAirlines() {
+        fetch("http://localhost:8080/api/airlines")
+          .then((res) => res.json())
+          .then((data) => {
+            let html = "<h3>Airline List</h3>";
+            data.forEach((a) => {
+              html += `<p>${a.airId} - ${a.airName}</p>`;
+            });
+            document.getElementById("airlineList").innerHTML = html;
+          });
+      }
+    </script>
+  </body>
+</html>

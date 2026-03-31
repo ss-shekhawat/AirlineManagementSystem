@@ -1,0 +1,174 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Schedule Flight</title>
+    <link rel="stylesheet" href="../css/style.css" />
+    <link rel="stylesheet" href="../css/admin-layout.css" />
+
+    <style>
+      .form-box {
+        background: white;
+        margin: 30px;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      }
+
+      .title {
+        text-align: center;
+        font-weight: bold;
+        margin-bottom: 20px;
+        border-bottom: 2px dashed #999;
+        padding-bottom: 10px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      }
+
+      label {
+        font-weight: bold;
+      }
+
+      input {
+        width: 100%;
+        padding: 8px;
+        margin-top: 5px;
+        border: none;
+        border-bottom: 2px solid #333;
+        outline: none;
+      }
+
+      .actions {
+        margin-top: 30px;
+        text-align: center;
+      }
+
+      .btn {
+        padding: 10px 20px;
+        margin: 10px;
+        border: none;
+        cursor: pointer;
+        border-radius: 5px;
+        font-weight: bold;
+      }
+
+      .btn-save {
+        background: #0d6efd;
+        color: white;
+      }
+
+      .btn-exit {
+        background: gray;
+        color: white;
+      }
+    </style>
+  </head>
+
+  <body>
+    <header class="admin-header">
+      <h2>Schedule Flight</h2>
+      <button onclick="logout()">Logout</button>
+    </header>
+
+    <div class="form-box">
+      <div class="title">-------- Schedule Flight --------</div>
+
+      <div class="grid">
+        <div>
+          <label>Flight ID</label>
+          <input id="fltId" placeholder="F0001" />
+        </div>
+
+        <div>
+          <label>Aircraft Model</label>
+          <input id="airModel" placeholder="Airbus A380" />
+        </div>
+
+        <div>
+          <label>Origin</label>
+          <input id="fltOrigin" placeholder="Jaipur" />
+        </div>
+
+        <div>
+          <label>Destination</label>
+          <input id="fltDest" placeholder="Chennai" />
+        </div>
+
+        <div>
+          <label>Range (Km)</label>
+          <input id="fltRange" type="number" />
+        </div>
+
+        <div>
+          <label>Total Seats</label>
+          <input id="fltTotSeat" type="number" />
+        </div>
+
+        <div>
+          <label>Fuel Capacity</label>
+          <input id="fltFuelCap" type="number" />
+        </div>
+
+        <div>
+          <label>Ticket Price</label>
+          <input id="fltTkPrice" type="number" />
+        </div>
+
+        <div>
+          <label>Departure Date</label>
+          <input id="fltDepDate" type="date" />
+        </div>
+
+        <div>
+          <label>Departure Time</label>
+          <input id="fltDepTime" type="time" />
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-save" onclick="saveFlight()">
+          Schedule Flight
+        </button>
+        <button class="btn btn-exit" onclick="goBack()">Exit</button>
+      </div>
+    </div>
+
+    <script src="../js/admin-layout.js"></script>
+
+    <script>
+      const BASE_URL = "http://localhost:8080";
+
+      function saveFlight() {
+        const data = {
+          fltId: document.getElementById("fltId").value,
+          airId: localStorage.getItem("userId"), // airline id
+          fltOrigin: document.getElementById("fltOrigin").value,
+          fltDest: document.getElementById("fltDest").value,
+          airModel: document.getElementById("airModel").value,
+          fltRange: document.getElementById("fltRange").value,
+          fltFuelCap: document.getElementById("fltFuelCap").value,
+          fltTotSeat: document.getElementById("fltTotSeat").value,
+          fltTkPrice: document.getElementById("fltTkPrice").value,
+          fltDepTime: document.getElementById("fltDepTime").value,
+        };
+
+        fetch(`${BASE_URL}/api/flights`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        })
+          .then((res) => res.json())
+          .then(() => {
+            alert("Flight Scheduled Successfully ✈️");
+          });
+      }
+
+      function goBack() {
+        window.location.href = "airline-dashboard.html";
+      }
+    </script>
+  </body>
+</html>

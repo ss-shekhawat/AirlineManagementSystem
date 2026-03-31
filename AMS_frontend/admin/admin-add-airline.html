@@ -1,0 +1,229 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Register New Airline</title>
+    <link rel="stylesheet" href="../css/style.css" />
+
+    <style>
+      .admin-header {
+        background: linear-gradient(90deg, #0d6efd, #084298);
+        color: white;
+        padding: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .form-box {
+        background: white;
+        margin: 30px;
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      }
+
+      .title {
+        text-align: center;
+        margin-bottom: 20px;
+        font-size: 22px;
+        font-weight: bold;
+        border-bottom: 2px solid #ddd;
+        padding-bottom: 10px;
+      }
+
+      .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      }
+
+      .field.full-width {
+        grid-column: 1 / -1;
+      }
+
+      label {
+        font-weight: bold;
+        display: block;
+        margin-bottom: 6px;
+      }
+
+      input,
+      textarea {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        margin: 0;
+      }
+
+      textarea {
+        min-height: 90px;
+        resize: vertical;
+      }
+
+      .actions {
+        text-align: center;
+        margin-top: 30px;
+      }
+
+      .btn {
+        padding: 10px 20px;
+        margin: 10px;
+        border: none;
+        cursor: pointer;
+        border-radius: 6px;
+        font-weight: bold;
+      }
+
+      .btn-refresh {
+        background: green;
+        color: white;
+      }
+
+      .btn-register {
+        background: #0d6efd;
+        color: white;
+      }
+
+      .btn-exit {
+        background: gray;
+        color: white;
+      }
+
+      @media (max-width: 700px) {
+        .form-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <header class="admin-header">
+      <h2>Register New Airline</h2>
+      <button onclick="logout()">Logout</button>
+    </header>
+
+    <div class="form-box">
+      <div class="title">Register New Airline</div>
+
+      <div class="form-grid">
+        <div class="field">
+          <label for="airId">Airline ID</label>
+          <input id="airId" readonly placeholder="Auto from DB later" />
+        </div>
+        <div class="field">
+          <label for="airEstDate">DOE</label>
+          <input id="airEstDate" type="date" />
+        </div>
+
+        <div class="field">
+          <label for="airName">Name</label>
+          <input id="airName" />
+        </div>
+        <div class="field">
+          <label for="airCity">City</label>
+          <input id="airCity" />
+        </div>
+
+        <div class="field">
+          <label for="airCountry">Country</label>
+          <input id="airCountry" />
+        </div>
+        <div class="field">
+          <label for="airState">State</label>
+          <input id="airState" />
+        </div>
+
+        <div class="field">
+          <label for="airPinCode">Pincode</label>
+          <input id="airPinCode" />
+        </div>
+        <div class="field">
+          <label for="airMobNum">Helpline</label>
+          <input id="airMobNum" />
+        </div>
+
+        <div class="field full-width">
+          <label for="airAddress">Address</label>
+          <textarea id="airAddress"></textarea>
+        </div>
+
+        <div class="field">
+          <label for="airFleet">Fleet Size</label>
+          <input id="airFleet" type="number" />
+        </div>
+        <div class="field">
+          <label for="airEmail">Email</label>
+          <input id="airEmail" type="email" />
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-refresh" onclick="resetForm()">Refresh</button>
+        <button class="btn btn-register" onclick="registerAirline()">Register</button>
+        <button class="btn btn-exit" onclick="goBack()">Exit</button>
+      </div>
+    </div>
+
+    <script>
+      const BASE_URL = "http://localhost:8080";
+
+      function resetForm() {
+        document.getElementById("airEstDate").value = "";
+        document.getElementById("airName").value = "";
+        document.getElementById("airCountry").value = "";
+        document.getElementById("airCity").value = "";
+        document.getElementById("airPinCode").value = "";
+        document.getElementById("airState").value = "";
+        document.getElementById("airAddress").value = "";
+        document.getElementById("airFleet").value = "";
+        document.getElementById("airMobNum").value = "";
+        document.getElementById("airEmail").value = "";
+      }
+
+      function registerAirline() {
+        const payload = {
+          airId: document.getElementById("airId").value,
+          airName: document.getElementById("airName").value,
+          airEstDate: document.getElementById("airEstDate").value,
+          airCountry: document.getElementById("airCountry").value,
+          airCity: document.getElementById("airCity").value,
+          airPinCode: document.getElementById("airPinCode").value,
+          airState: document.getElementById("airState").value,
+          airAddress: document.getElementById("airAddress").value,
+          airFleet: document.getElementById("airFleet").value,
+          airMobNum: document.getElementById("airMobNum").value,
+          airEmail: document.getElementById("airEmail").value,
+          airStatus: "A",
+        };
+
+        fetch(`${BASE_URL}/api/airlines`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        })
+          .then((res) => {
+            if (!res.ok) {
+              throw new Error("Register failed");
+            }
+
+            alert("Airline registered successfully");
+            window.location.href = "admin-airlines.html";
+          })
+          .catch(() => {
+            alert("Airline ID auto-generation/backend logic can be connected later.");
+          });
+      }
+
+      function goBack() {
+        window.location.href = "admin-airlines.html";
+      }
+
+      function logout() {
+        localStorage.clear();
+        window.location.href = "../login.html";
+      }
+    </script>
+  </body>
+</html>

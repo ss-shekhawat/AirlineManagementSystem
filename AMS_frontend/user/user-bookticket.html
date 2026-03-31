@@ -1,0 +1,355 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Book Tickets</title>
+    <link rel="stylesheet" href="../css/style.css" />
+
+    <style>
+      .admin-header {
+        background: linear-gradient(90deg, #0d6efd, #084298);
+        color: white;
+        padding: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .box {
+        background: white;
+        margin: 30px;
+        padding: 25px;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      }
+
+      .title {
+        text-align: center;
+        font-weight: bold;
+        border-bottom: 2px dashed #999;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+      }
+
+      .detail-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 18px 28px;
+      }
+
+      .field {
+        background: #f8f9fa;
+        padding: 14px;
+        border-radius: 8px;
+      }
+
+      .field.full-width {
+        grid-column: 1 / -1;
+      }
+
+      label {
+        display: inline-block;
+        min-width: 140px;
+        font-weight: bold;
+      }
+
+      input {
+        width: calc(100% - 150px);
+        padding: 6px 8px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+      }
+
+      .actions {
+        text-align: center;
+        margin-top: 30px;
+      }
+
+      .btn {
+        padding: 10px 20px;
+        margin: 10px;
+        border: none;
+        cursor: pointer;
+        border-radius: 6px;
+        font-weight: bold;
+      }
+
+      .btn-previous {
+        background: orange;
+        color: white;
+      }
+
+      .btn-book {
+        background: #0d6efd;
+        color: white;
+      }
+
+      .btn-exit {
+        background: gray;
+        color: white;
+      }
+
+      .modal {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+
+      .modal.show {
+        display: flex;
+      }
+
+      .modal-box {
+        width: min(760px, 100%);
+        background: white;
+        border-radius: 10px;
+        padding: 25px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+      }
+
+      .modal-title {
+        text-align: center;
+        font-size: 24px;
+        font-weight: bold;
+        margin-bottom: 20px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      th,
+      td {
+        padding: 10px;
+        text-align: center;
+        border-bottom: 1px solid #ddd;
+      }
+
+      th {
+        background: #0d6efd;
+        color: white;
+      }
+
+      @media (max-width: 700px) {
+        .detail-grid {
+          grid-template-columns: 1fr;
+        }
+
+        input {
+          width: 100%;
+          margin-top: 8px;
+        }
+
+        label {
+          min-width: 0;
+          display: block;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <header class="admin-header">
+      <h2>Book Tickets</h2>
+      <button onclick="logout()">Logout</button>
+    </header>
+
+    <div class="box">
+      <div class="title">-------- Book Tickets --------</div>
+
+      <div class="detail-grid">
+        <div class="field"><label>Flight ID:</label><input id="flightId" readonly /></div>
+        <div class="field"><label>Airline:</label><input id="airlineName" readonly /></div>
+        <div class="field"><label>Booking ID:</label><input id="bookingId" readonly /></div>
+        <div class="field"><label>Ticket ID:</label><input id="ticketId" readonly /></div>
+        <div class="field"><label>Origin:</label><input id="origin" readonly /></div>
+        <div class="field"><label>Destination:</label><input id="destination" readonly /></div>
+        <div class="field"><label>Departure Date:</label><input id="departureDate" readonly /></div>
+        <div class="field"><label>Departure Time:</label><input id="departureTime" readonly /></div>
+        <div class="field"><label>Passenger Name:</label><input id="passengerName" /></div>
+        <div class="field"><label>Gender:</label><input id="gender" /></div>
+        <div class="field"><label>Age:</label><input id="age" type="number" /></div>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-previous" onclick="openPassengerModal()">Previous Passenger</button>
+        <button class="btn btn-book" onclick="bookTicket()">Book Ticket</button>
+        <button class="btn btn-exit" onclick="goBack()">Exit</button>
+      </div>
+    </div>
+
+    <div class="modal" id="passengerModal">
+      <div class="modal-box">
+        <div class="modal-title">Choose Passenger</div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Opt</th>
+              <th>Passenger ID</th>
+              <th>Name</th>
+              <th>Gender</th>
+              <th>Age</th>
+              <th>Relation</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="passengerTable"></tbody>
+        </table>
+
+        <div class="actions">
+          <button class="btn btn-exit" onclick="closePassengerModal()">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let passengers = [];
+
+      function getSelectedFlight() {
+        try {
+          return JSON.parse(localStorage.getItem("selectedFlight") || "{}");
+        } catch {
+          return {};
+        }
+      }
+
+      function getStoredProfile() {
+        try {
+          return JSON.parse(localStorage.getItem("selectedUserProfile") || "{}");
+        } catch {
+          return {};
+        }
+      }
+
+      function getValue(obj, keys, fallback = "") {
+        for (const key of keys) {
+          const value = obj?.[key];
+          if (value !== undefined && value !== null && value !== "") {
+            return value;
+          }
+        }
+        return fallback;
+      }
+
+      function getDefaultPassengers() {
+        const profile = getStoredProfile();
+        return [
+          {
+            passengerId: getValue(profile, ["usrId", "userId"], "P0001"),
+            name: getValue(profile, ["usrName", "userName", "name"], "User Passenger"),
+            gender: getValue(profile, ["usrGender", "gender"], "Male"),
+            age: 24,
+            relation: "Self",
+          },
+          {
+            passengerId: "P0002",
+            name: "Kamlesh",
+            gender: "Male",
+            age: 25,
+            relation: "Brother",
+          },
+          {
+            passengerId: "P0003",
+            name: "Hardik",
+            gender: "Male",
+            age: 29,
+            relation: "Friend",
+          },
+        ];
+      }
+
+      function loadBookingForm() {
+        const flight = getSelectedFlight();
+        const profile = getStoredProfile();
+
+        document.getElementById("flightId").value = getValue(flight, ["fltId", "flightId"], "");
+        document.getElementById("airlineName").value = getValue(flight, ["airName", "airlineName", "airId"], "");
+        document.getElementById("bookingId").value = `B${Date.now().toString().slice(-4)}`;
+        document.getElementById("ticketId").value = `T${Date.now().toString().slice(-4)}`;
+        document.getElementById("origin").value = getValue(flight, ["fltOrigin", "origin"], "");
+        document.getElementById("destination").value = getValue(flight, ["fltDest", "destination"], "");
+        document.getElementById("departureDate").value = getValue(flight, ["fltDepDate", "departureDate"], "");
+        document.getElementById("departureTime").value = getValue(flight, ["fltDepTime", "departureTime"], "");
+        document.getElementById("passengerName").value = getValue(profile, ["usrName", "userName", "name"], "");
+        document.getElementById("gender").value = getValue(profile, ["usrGender", "gender"], "");
+        document.getElementById("age").value = "24";
+
+        passengers = getDefaultPassengers();
+      }
+
+      function openPassengerModal() {
+        document.getElementById("passengerTable").innerHTML = passengers
+          .map(
+            (passenger, index) => `
+              <tr>
+                <td>${index + 1}</td>
+                <td>${passenger.passengerId}</td>
+                <td>${passenger.name}</td>
+                <td>${passenger.gender}</td>
+                <td>${passenger.age}</td>
+                <td>${passenger.relation}</td>
+                <td>
+                  <button class="btn btn-book" onclick="selectPassenger(${index})">Select</button>
+                </td>
+              </tr>
+            `
+          )
+          .join("");
+
+        document.getElementById("passengerModal").classList.add("show");
+      }
+
+      function closePassengerModal() {
+        document.getElementById("passengerModal").classList.remove("show");
+      }
+
+      function selectPassenger(index) {
+        const passenger = passengers[index];
+        if (!passenger) {
+          return;
+        }
+
+        document.getElementById("passengerName").value = passenger.name;
+        document.getElementById("gender").value = passenger.gender;
+        document.getElementById("age").value = passenger.age;
+        closePassengerModal();
+      }
+
+      function bookTicket() {
+        const booking = {
+          bookingId: document.getElementById("bookingId").value,
+          ticketId: document.getElementById("ticketId").value,
+          flightId: document.getElementById("flightId").value,
+          airlineName: document.getElementById("airlineName").value,
+          origin: document.getElementById("origin").value,
+          destination: document.getElementById("destination").value,
+          departureDate: document.getElementById("departureDate").value,
+          departureTime: document.getElementById("departureTime").value,
+          passengerName: document.getElementById("passengerName").value,
+          gender: document.getElementById("gender").value,
+          age: document.getElementById("age").value,
+        };
+
+        localStorage.setItem("latestBookedTicket", JSON.stringify(booking));
+        alert("Ticket booked successfully");
+        window.location.href = "user-searchedflights.html";
+      }
+
+      function goBack() {
+        window.location.href = "user-viewflight.html";
+      }
+
+      function logout() {
+        localStorage.clear();
+        window.location.href = "../login.html";
+      }
+
+      loadBookingForm();
+    </script>
+  </body>
+</html>

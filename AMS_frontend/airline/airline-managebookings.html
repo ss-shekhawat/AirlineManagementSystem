@@ -1,0 +1,319 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Manage Bookings</title>
+    <link rel="stylesheet" href="../css/style.css" />
+    <link rel="stylesheet" href="../css/admin-layout.css" />
+
+    <style>
+      .box {
+        background: white;
+        margin: 30px;
+        padding: 25px;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      }
+
+      .title {
+        text-align: center;
+        font-weight: bold;
+        border-bottom: 2px dashed #999;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+      }
+
+      .toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 15px;
+        flex-wrap: wrap;
+      }
+
+      .toolbar-left {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+
+      .filter-label {
+        font-weight: bold;
+        color: #333;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      th,
+      td {
+        padding: 10px;
+        text-align: center;
+        border-bottom: 1px solid #ddd;
+      }
+
+      th {
+        background: #0d6efd;
+        color: white;
+      }
+
+      tr:hover {
+        background: #f1f1f1;
+      }
+
+      .btn {
+        padding: 8px 14px;
+        border: none;
+        cursor: pointer;
+        border-radius: 5px;
+        font-size: 12px;
+        font-weight: bold;
+      }
+
+      .btn-refresh {
+        background: green;
+        color: white;
+      }
+
+      .btn-filter {
+        background: orange;
+        color: white;
+      }
+
+      .btn-manage {
+        background: #0d6efd;
+        color: white;
+      }
+
+      .btn-exit {
+        background: gray;
+        color: white;
+      }
+
+      .actions {
+        text-align: center;
+        margin-top: 20px;
+      }
+
+      .empty-state {
+        padding: 20px;
+        color: #666;
+        font-weight: bold;
+      }
+
+      @media (max-width: 700px) {
+        .toolbar {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <header class="admin-header">
+      <h2>Manage Bookings</h2>
+      <button onclick="logout()">Logout</button>
+    </header>
+
+    <div class="box">
+      <div class="title">-------- Manage Bookings --------</div>
+
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <button class="btn btn-refresh" onclick="loadBookings()">Refresh</button>
+          <span class="filter-label">Show:</span>
+          <button class="btn btn-filter" id="statusFilterBtn" onclick="toggleFilter()">
+            Completed
+          </button>
+        </div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Opt</th>
+            <th>Booking ID</th>
+            <th>Origin</th>
+            <th>Destination</th>
+            <th>Travel Date</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="bookingTable"></tbody>
+      </table>
+
+      <div class="actions">
+        <button class="btn btn-exit" onclick="goBack()">Exit</button>
+      </div>
+    </div>
+
+    <script>
+      const BASE_URL = "http://localhost:8080";
+      const airId = localStorage.getItem("userId");
+      const FILTERS = ["Completed", "Upcoming", "Cancelled"];
+
+      let currentFilterIndex = 0;
+      let airlineBookings = [];
+
+      function getValue(obj, keys, fallback = "") {
+        for (const key of keys) {
+          const value = obj?.[key];
+          if (value !== undefined && value !== null && value !== "") {
+            return value;
+          }
+        }
+        return fallback;
+      }
+
+      function normalizeStatus(status) {
+        const value = String(status || "").trim().toLowerCase();
+
+        if (value === "completed" || value === "c") {
+          return "Completed";
+        }
+        if (value === "upcoming" || value === "u" || value === "active") {
+          return "Upcoming";
+        }
+        if (value === "cancelled" || value === "canceled" || value === "x" || value === "i") {
+          return "Cancelled";
+        }
+
+        return "Upcoming";
+      }
+
+      function updateFilterButton() {
+        document.getElementById("statusFilterBtn").innerText = FILTERS[currentFilterIndex];
+      }
+
+      function getCurrentFilter() {
+        return FILTERS[currentFilterIndex];
+      }
+
+      function renderBookings() {
+        const bookingTable = document.getElementById("bookingTable");
+        const currentFilter = getCurrentFilter();
+        const filteredBookings = airlineBookings.filter(
+          (booking) => booking.displayStatus === currentFilter
+        );
+
+        if (filteredBookings.length === 0) {
+          bookingTable.innerHTML = `
+            <tr>
+              <td colspan="7" class="empty-state">
+                No ${currentFilter.toLowerCase()} bookings found.
+              </td>
+            </tr>
+          `;
+          return;
+        }
+
+        bookingTable.innerHTML = filteredBookings
+          .map(
+            (booking, index) => `
+              <tr>
+                <td>${index + 1}</td>
+                <td>${booking.bookingId}</td>
+                <td>${booking.origin}</td>
+                <td>${booking.destination}</td>
+                <td>${booking.travelDate}</td>
+                <td>${booking.displayStatus}</td>
+                <td>
+                  <button class="btn btn-manage" onclick="manageBooking('${booking.bookingId}')">
+                    Manage
+                  </button>
+                </td>
+              </tr>
+            `
+          )
+          .join("");
+      }
+
+      function loadBookings() {
+        Promise.all([
+          fetch(`${BASE_URL}/api/bookings`).then((res) => res.json()),
+          fetch(`${BASE_URL}/api/flights`).then((res) => res.json()),
+        ])
+          .then(([bookings, flights]) => {
+            const flightMap = new Map(
+              flights.map((flight) => [getValue(flight, ["fltId", "flightId"]), flight])
+            );
+
+            airlineBookings = bookings
+              .map((booking) => {
+                const flightId = getValue(booking, ["fltId", "flightId"]);
+                const flight = flightMap.get(flightId) || {};
+                const bookingStatus = normalizeStatus(
+                  getValue(booking, ["bkStatus", "status", "bookingStatus"], "Upcoming")
+                );
+
+                return {
+                  rawBooking: booking,
+                  rawFlight: flight,
+                  bookingId: getValue(booking, ["bkId", "bookingId"], "-"),
+                  flightId,
+                  airlineId: getValue(flight, ["airId", "airlineId"]),
+                  origin: getValue(booking, ["origin", "bkOrigin"], getValue(flight, ["fltOrigin", "origin"], "-")),
+                  destination: getValue(
+                    booking,
+                    ["destination", "bkDestination"],
+                    getValue(flight, ["fltDest", "destination"], "-")
+                  ),
+                  travelDate: getValue(
+                    booking,
+                    ["travelDate", "bkDate", "journeyDate"],
+                    getValue(flight, ["fltDepDate", "departureDate"], "-")
+                  ),
+                  displayStatus: bookingStatus,
+                  customerId: getValue(booking, ["usrId", "userId", "customerId"], "-"),
+                  passengerName: getValue(booking, ["passengerName", "usrName", "customerName"], "-"),
+                  ticketRows: Array.isArray(booking.tickets) ? booking.tickets : [],
+                };
+              })
+              .filter((booking) => booking.airlineId === airId);
+
+            renderBookings();
+          })
+          .catch(() => {
+            document.getElementById("bookingTable").innerHTML = `
+              <tr>
+                <td colspan="7" class="empty-state">Unable to load bookings.</td>
+              </tr>
+            `;
+          });
+      }
+
+      function toggleFilter() {
+        currentFilterIndex = (currentFilterIndex + 1) % FILTERS.length;
+        updateFilterButton();
+        renderBookings();
+      }
+
+      function manageBooking(bookingId) {
+        const booking = airlineBookings.find((item) => item.bookingId === bookingId);
+        if (!booking) {
+          return;
+        }
+
+        localStorage.setItem("selectedBooking", JSON.stringify(booking));
+        window.location.href = "airline-booking-details.html";
+      }
+
+      function goBack() {
+        window.location.href = "airline-dashboard.html";
+      }
+
+      function logout() {
+        localStorage.clear();
+        window.location.href = "../login.html";
+      }
+
+      updateFilterButton();
+      loadBookings();
+    </script>
+  </body>
+</html>

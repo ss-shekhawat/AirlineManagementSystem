@@ -1,0 +1,177 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Airline Profile</title>
+    <link rel="stylesheet" href="../css/style.css" />
+    <link rel="stylesheet" href="../css/admin-layout.css" />
+
+    <style>
+      .profile-box {
+        background: white;
+        padding: 30px;
+        border-radius: 12px;
+        margin: 30px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      }
+
+      .profile-title {
+        text-align: center;
+        margin-bottom: 20px;
+        font-size: 22px;
+        font-weight: bold;
+        border-bottom: 2px solid #ddd;
+        padding-bottom: 10px;
+      }
+
+      .profile-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      }
+
+      .field {
+        font-size: 16px;
+      }
+
+      .label {
+        font-weight: bold;
+        color: #333;
+      }
+
+      .actions {
+        text-align: center;
+        margin-top: 30px;
+      }
+
+      .btn {
+        padding: 10px 20px;
+        margin: 10px;
+        border: none;
+        cursor: pointer;
+        border-radius: 6px;
+        font-weight: bold;
+      }
+
+      .btn-update {
+        background: #0d6efd;
+        color: white;
+      }
+
+      .btn-exit {
+        background: gray;
+        color: white;
+      }
+    </style>
+  </head>
+
+  <body>
+    <header class="admin-header">
+      <h2>Airline Profile</h2>
+      <button onclick="logout()">Logout</button>
+    </header>
+
+    <div class="profile-box">
+      <div class="profile-title">View Profile</div>
+
+      <div class="profile-grid">
+        <div class="field">
+          <span class="label">Airline ID:</span> <span id="airId"></span>
+        </div>
+        <div class="field">
+          <span class="label">Established:</span> <span id="airEstDate"></span>
+        </div>
+
+        <div class="field">
+          <span class="label">Name:</span> <span id="airName"></span>
+        </div>
+        <div class="field">
+          <span class="label">City:</span> <span id="airCity"></span>
+        </div>
+
+        <div class="field">
+          <span class="label">Country:</span> <span id="airCountry"></span>
+        </div>
+        <div class="field">
+          <span class="label">State:</span> <span id="airState"></span>
+        </div>
+
+        <div class="field">
+          <span class="label">Pincode:</span> <span id="airPinCode"></span>
+        </div>
+        <div class="field">
+          <span class="label">Helpline:</span> <span id="airMobNum"></span>
+        </div>
+
+        <div class="field">
+          <span class="label">Email:</span> <span id="airEmail"></span>
+        </div>
+        <div class="field">
+          <span class="label">Fleet Size:</span> <span id="airFleet"></span>
+        </div>
+
+        <div class="field">
+          <span class="label">Address:</span> <span id="airAddress"></span>
+        </div>
+        <div class="field">
+          <span class="label">Status:</span> <span id="airStatus"></span>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-update" onclick="updateProfile()">Update</button>
+        <button class="btn btn-exit" onclick="goBack()">Exit</button>
+      </div>
+    </div>
+
+    <script src="../js/admin-layout.js"></script>
+
+    <script>
+      const BASE_URL = "http://localhost:8080";
+
+      // Logged airline id (same as login)
+      const airId = localStorage.getItem("userId");
+
+      // Load Profile
+      function loadProfile() {
+        fetch(`${BASE_URL}/api/airlines`)
+          .then((res) => res.json())
+          .then((data) => {
+            const airline = data.find((a) => a.airId === airId);
+
+            if (airline) {
+              document.getElementById("airId").innerText = airline.airId;
+              document.getElementById("airName").innerText = airline.airName;
+              document.getElementById("airCity").innerText = airline.airCity;
+              document.getElementById("airState").innerText = airline.airState;
+              document.getElementById("airCountry").innerText =
+                airline.airCountry;
+              document.getElementById("airPinCode").innerText =
+                airline.airPinCode;
+              document.getElementById("airAddress").innerText =
+                airline.airAddress;
+              document.getElementById("airEmail").innerText = airline.airEmail;
+              document.getElementById("airFleet").innerText = airline.airFleet;
+              document.getElementById("airMobNum").innerText =
+                airline.airMobNum;
+              document.getElementById("airEstDate").innerText =
+                airline.airEstDate;
+              document.getElementById("airStatus").innerText =
+                airline.airStatus;
+            }
+          });
+      }
+
+      // Buttons
+      function updateProfile() {
+        alert("Update form next step me banayenge 🔥");
+      }
+
+      function goBack() {
+        window.location.href = "airline-dashboard.html";
+      }
+
+      // Load on start
+      loadProfile();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,53 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="../css/style.css" />
+    <link rel="stylesheet" href="../css/admin.css" />
+  </head>
+  <body>
+    <header class="admin-header">
+      <div>
+        <h2>Domestic Flight Booking System</h2>
+        <p>Admin Dashboard</p>
+      </div>
+      <div class="user-info">
+        <span id="adminName"></span>
+        <span id="dateTime"></span>
+        <button onclick="logout()">Logout</button>
+      </div>
+    </header>
+
+    <div class="dashboard-container">
+      <div class="card" onclick="goTo('/admin/admin-airlines.html')">
+        <h3>1. Manage Airlines</h3>
+      </div>
+
+      <div class="card" onclick="goTo('manage-customers.html')">
+        <h3>2. Manage Customers</h3>
+      </div>
+
+      <div class="card" onclick="goTo('view-bookings.html')">
+        <h3>3. View Bookings</h3>
+      </div>
+
+      <div class="card" onclick="goTo('view-flights.html')">
+        <h3>4. View Flights</h3>
+      </div>
+
+      <div class="card" onclick="goTo('manage-complaints.html')">
+        <h3>5. Manage Complaints</h3>
+      </div>
+
+      <div class="card" onclick="goTo('control-file.html')">
+        <h3>6. Control File Setup</h3>
+      </div>
+
+      <div class="card" onclick="goTo('change-password.html')">
+        <h3>7. Change Password</h3>
+      </div>
+    </div>
+
+    <script src="../js/admin.js"></script>
+  </body>
+</html>

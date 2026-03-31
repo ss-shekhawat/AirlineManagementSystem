@@ -1,0 +1,33 @@
+<!doctype html>
+<html>
+  <head>
+    <title>View Flights</title>
+    <link rel="stylesheet" href="../css/style.css" />
+    <link rel="stylesheet" href="../css/admin-layout.css" />
+  </head>
+  <body>
+    <header class="admin-header">
+      <h2>All Flights</h2>
+      <button onclick="logout()">Logout</button>
+    </header>
+
+    <button onclick="loadFlights()">Load Flights</button>
+
+    <div id="flightList"></div>
+
+    <script src="../js/admin-layout.js"></script>
+    <script>
+      function loadFlights() {
+        fetch("http://localhost:8080/api/flights")
+          .then((res) => res.json())
+          .then((data) => {
+            let html = "<h3>Flight List</h3>";
+            data.forEach((f) => {
+              html += `<p>${f.fltId} - ${f.fltOrigin} → ${f.fltDest}</p>`;
+            });
+            document.getElementById("flightList").innerHTML = html;
+          });
+      }
+    </script>
+  </body>
+</html>

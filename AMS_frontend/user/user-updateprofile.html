@@ -1,0 +1,253 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Update Profile</title>
+    <link rel="stylesheet" href="../css/style.css" />
+
+    <style>
+      .admin-header {
+        background: linear-gradient(90deg, #0d6efd, #084298);
+        color: white;
+        padding: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .form-box {
+        background: white;
+        padding: 30px;
+        border-radius: 12px;
+        margin: 30px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      }
+
+      .title {
+        text-align: center;
+        margin-bottom: 20px;
+        font-size: 22px;
+        font-weight: bold;
+        border-bottom: 2px solid #ddd;
+        padding-bottom: 10px;
+      }
+
+      .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      }
+
+      .field.full-width {
+        grid-column: 1 / -1;
+      }
+
+      label {
+        font-weight: bold;
+        display: block;
+        margin-bottom: 6px;
+      }
+
+      input,
+      select,
+      textarea {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        margin: 0;
+      }
+
+      textarea {
+        min-height: 90px;
+        resize: vertical;
+      }
+
+      .actions {
+        text-align: center;
+        margin-top: 30px;
+      }
+
+      .btn {
+        padding: 10px 20px;
+        margin: 10px;
+        border: none;
+        cursor: pointer;
+        border-radius: 6px;
+        font-weight: bold;
+      }
+
+      .btn-update {
+        background: #0d6efd;
+        color: white;
+      }
+
+      .btn-exit {
+        background: gray;
+        color: white;
+      }
+
+      @media (max-width: 700px) {
+        .form-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <header class="admin-header">
+      <h2>Update Profile</h2>
+      <button onclick="logout()">Logout</button>
+    </header>
+
+    <div class="form-box">
+      <div class="title">Update Profile</div>
+
+      <div class="form-grid">
+        <div class="field">
+          <label for="usrId">User ID</label>
+          <input id="usrId" readonly />
+        </div>
+        <div class="field">
+          <label for="usrDob">DOB</label>
+          <input id="usrDob" type="date" />
+        </div>
+
+        <div class="field">
+          <label for="usrName">Name</label>
+          <input id="usrName" />
+        </div>
+        <div class="field">
+          <label for="usrAadhar">Aadhar</label>
+          <input id="usrAadhar" />
+        </div>
+
+        <div class="field">
+          <label for="usrMobile">Mobile</label>
+          <input id="usrMobile" />
+        </div>
+        <div class="field">
+          <label for="usrGender">Gender</label>
+          <select id="usrGender">
+            <option value="">Select Gender</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="usrEmail">Email</label>
+          <input id="usrEmail" />
+        </div>
+        <div class="field">
+          <label for="usrPincode">Pincode</label>
+          <input id="usrPincode" />
+        </div>
+
+        <div class="field">
+          <label for="usrCity">City</label>
+          <input id="usrCity" />
+        </div>
+        <div class="field">
+          <label for="usrState">State</label>
+          <input id="usrState" />
+        </div>
+
+        <div class="field full-width">
+          <label for="usrAddress">Address</label>
+          <textarea id="usrAddress"></textarea>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-update" onclick="updateProfile()">Update</button>
+        <button class="btn btn-exit" onclick="goBack()">Exit</button>
+      </div>
+    </div>
+
+    <script>
+      const BASE_URL = "http://localhost:8080";
+
+      function getStoredProfile() {
+        try {
+          return JSON.parse(localStorage.getItem("selectedUserProfile") || "{}");
+        } catch {
+          return {};
+        }
+      }
+
+      function getValue(obj, keys, fallback = "") {
+        for (const key of keys) {
+          const value = obj?.[key];
+          if (value !== undefined && value !== null && value !== "") {
+            return value;
+          }
+        }
+        return fallback;
+      }
+
+      function loadProfile() {
+        const user = getStoredProfile();
+        document.getElementById("usrId").value = getValue(user, ["usrId", "userId"], localStorage.getItem("userId") || "");
+        document.getElementById("usrName").value = getValue(user, ["usrName", "userName", "name"], "");
+        document.getElementById("usrDob").value = getValue(user, ["usrDob", "dob", "dateOfBirth"], "");
+        document.getElementById("usrMobile").value = getValue(user, ["usrMobile", "mobile", "usrMobNum"], "");
+        document.getElementById("usrAadhar").value = getValue(user, ["usrAadhar", "aadhar", "aadhaar"], "");
+        document.getElementById("usrEmail").value = getValue(user, ["usrEmail", "email"], "");
+        document.getElementById("usrGender").value = getValue(user, ["usrGender", "gender"], "");
+        document.getElementById("usrCity").value = getValue(user, ["usrCity", "city"], "");
+        document.getElementById("usrPincode").value = getValue(user, ["usrPincode", "pinCode", "pincode"], "");
+        document.getElementById("usrState").value = getValue(user, ["usrState", "state"], "");
+        document.getElementById("usrAddress").value = getValue(user, ["usrAddress", "address"], "");
+      }
+
+      function updateProfile() {
+        const payload = {
+          usrId: document.getElementById("usrId").value,
+          usrName: document.getElementById("usrName").value,
+          usrDob: document.getElementById("usrDob").value,
+          usrMobile: document.getElementById("usrMobile").value,
+          usrAadhar: document.getElementById("usrAadhar").value,
+          usrEmail: document.getElementById("usrEmail").value,
+          usrGender: document.getElementById("usrGender").value,
+          usrCity: document.getElementById("usrCity").value,
+          usrPincode: document.getElementById("usrPincode").value,
+          usrState: document.getElementById("usrState").value,
+          usrAddress: document.getElementById("usrAddress").value,
+        };
+
+        localStorage.setItem("selectedUserProfile", JSON.stringify(payload));
+
+        fetch(`${BASE_URL}/api/users/${payload.usrId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        })
+          .then((res) => {
+            if (!res.ok) {
+              throw new Error("Update failed");
+            }
+
+            alert("Profile updated successfully");
+            window.location.href = "user-profile.html";
+          })
+          .catch(() => {
+            alert("Profile saved locally. Backend update endpoint may differ.");
+            window.location.href = "user-profile.html";
+          });
+      }
+
+      function goBack() {
+        window.location.href = "user-profile.html";
+      }
+
+      function logout() {
+        localStorage.clear();
+        window.location.href = "../login.html";
+      }
+
+      loadProfile();
+    </script>
+  </body>
+</html>

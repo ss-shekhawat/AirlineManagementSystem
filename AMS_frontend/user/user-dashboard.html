@@ -1,0 +1,57 @@
+<!doctype html>
+<html>
+  <head>
+    <title>User Dashboard</title>
+    <link rel="stylesheet" href="../css/style.css" />
+    <link rel="stylesheet" href="../css/admin.css" />
+
+    <style>
+      .card h3 {
+        margin: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="admin-header">
+      <div>
+        <h2>User Panel</h2>
+      </div>
+      <div class="user-info">
+        <div id="userName"></div>
+        <button onclick="logout()">Logout</button>
+      </div>
+    </header>
+
+    <div class="dashboard-container">
+      <div class="card" onclick="goTo('user-profile.html')">
+        <h3>1. View / Update Profile</h3>
+      </div>
+
+      <div class="card" onclick="goTo('user-searchflights.html')">
+        <h3>2. Search Flight</h3>
+      </div>
+
+      <div class="card" onclick="goTo('user-managebookings.html')">
+        <h3>3. Manage Bookings</h3>
+      </div>
+
+      <div class="card" onclick="goTo('user-password.html')">
+        <h3>4. Change Password</h3>
+      </div>
+    </div>
+
+    <script>
+      document.getElementById("userName").innerText =
+        "User: " + localStorage.getItem("userId");
+
+      function goTo(page) {
+        window.location.href = page;
+      }
+
+      function logout() {
+        localStorage.clear();
+        window.location.href = "../login.html";
+      }
+    </script>
+  </body>
+</html>

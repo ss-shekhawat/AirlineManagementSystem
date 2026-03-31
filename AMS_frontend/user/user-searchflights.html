@@ -1,0 +1,136 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Search Flight</title>
+    <link rel="stylesheet" href="../css/style.css" />
+
+    <style>
+      .admin-header {
+        background: linear-gradient(90deg, #0d6efd, #084298);
+        color: white;
+        padding: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .form-box {
+        background: white;
+        padding: 30px;
+        border-radius: 12px;
+        margin: 30px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      }
+
+      .title {
+        text-align: center;
+        margin-bottom: 20px;
+        font-size: 22px;
+        font-weight: bold;
+        border-bottom: 2px solid #ddd;
+        padding-bottom: 10px;
+      }
+
+      .search-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 20px;
+        max-width: 420px;
+        margin: 0 auto;
+      }
+
+      label {
+        font-weight: bold;
+        display: block;
+        margin-bottom: 6px;
+      }
+
+      input {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        margin: 0;
+      }
+
+      .actions {
+        text-align: center;
+        margin-top: 30px;
+      }
+
+      .btn {
+        padding: 10px 20px;
+        margin: 10px;
+        border: none;
+        cursor: pointer;
+        border-radius: 6px;
+        font-weight: bold;
+      }
+
+      .btn-search {
+        background: #0d6efd;
+        color: white;
+      }
+
+      .btn-exit {
+        background: gray;
+        color: white;
+      }
+    </style>
+  </head>
+
+  <body>
+    <header class="admin-header">
+      <h2>Search Flight</h2>
+      <button onclick="logout()">Logout</button>
+    </header>
+
+    <div class="form-box">
+      <div class="title">Search Flight</div>
+
+      <div class="search-grid">
+        <div>
+          <label for="origin">Origin</label>
+          <input id="origin" placeholder="Enter origin" />
+        </div>
+
+        <div>
+          <label for="destination">Destination</label>
+          <input id="destination" placeholder="Enter destination" />
+        </div>
+
+        <div>
+          <label for="departureDate">Departure Date</label>
+          <input id="departureDate" type="date" />
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-search" onclick="searchFlights()">Search</button>
+        <button class="btn btn-exit" onclick="goBack()">Exit</button>
+      </div>
+    </div>
+
+    <script>
+      function searchFlights() {
+        const searchData = {
+          origin: document.getElementById("origin").value,
+          destination: document.getElementById("destination").value,
+          departureDate: document.getElementById("departureDate").value,
+        };
+
+        localStorage.setItem("userFlightSearch", JSON.stringify(searchData));
+        window.location.href = "user-searchedflights.html";
+      }
+
+      function goBack() {
+        window.location.href = "user-dashboard.html";
+      }
+
+      function logout() {
+        localStorage.clear();
+        window.location.href = "../login.html";
+      }
+    </script>
+  </body>
+</html>

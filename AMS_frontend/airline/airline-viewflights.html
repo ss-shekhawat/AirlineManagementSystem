@@ -1,0 +1,492 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Manage Flights</title>
+    <link rel="stylesheet" href="../css/style.css" />
+    <link rel="stylesheet" href="../css/admin-layout.css" />
+
+    <style>
+      .box {
+        background: white;
+        margin: 30px;
+        padding: 25px;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      }
+
+      .title {
+        text-align: center;
+        font-weight: bold;
+        border-bottom: 2px dashed #999;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+      }
+
+      .toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 15px;
+        flex-wrap: wrap;
+      }
+
+      .toolbar-left {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+
+      .filter-label {
+        font-weight: bold;
+        color: #333;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      th,
+      td {
+        padding: 10px;
+        text-align: center;
+        border-bottom: 1px solid #ddd;
+      }
+
+      th {
+        background: #0d6efd;
+        color: white;
+      }
+
+      tr:hover {
+        background: #f1f1f1;
+      }
+
+      .btn {
+        padding: 8px 14px;
+        border: none;
+        cursor: pointer;
+        border-radius: 5px;
+        font-size: 12px;
+        font-weight: bold;
+      }
+
+      .btn-refresh {
+        background: green;
+        color: white;
+      }
+
+      .btn-filter {
+        background: orange;
+        color: white;
+      }
+
+      .btn-view {
+        background: #0d6efd;
+        color: white;
+      }
+
+      .btn-edit {
+        background: #198754;
+        color: white;
+      }
+
+      .btn-exit {
+        background: gray;
+        color: white;
+      }
+
+      .row-actions {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .actions {
+        text-align: center;
+        margin-top: 20px;
+      }
+
+      .empty-state {
+        padding: 20px;
+        color: #666;
+        font-weight: bold;
+      }
+
+      .modal {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+
+      .modal.show {
+        display: flex;
+      }
+
+      .modal-box {
+        width: min(520px, 100%);
+        background: white;
+        border-radius: 10px;
+        padding: 25px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+      }
+
+      .modal-title {
+        font-size: 20px;
+        font-weight: bold;
+        margin-bottom: 18px;
+      }
+
+      .detail-grid,
+      .edit-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+      }
+
+      .detail-item {
+        background: #f8f9fa;
+        padding: 12px;
+        border-radius: 8px;
+      }
+
+      .detail-item strong {
+        display: block;
+        margin-bottom: 4px;
+      }
+
+      .edit-grid label {
+        font-weight: bold;
+        text-align: left;
+        display: block;
+      }
+
+      .edit-grid input {
+        width: 100%;
+        padding: 8px;
+        margin-top: 6px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+      }
+
+      .modal-actions {
+        margin-top: 20px;
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      @media (max-width: 700px) {
+        .detail-grid,
+        .edit-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .toolbar {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <header class="admin-header">
+      <h2>Manage Flights</h2>
+      <button onclick="logout()">Logout</button>
+    </header>
+
+    <div class="box">
+      <div class="title">-------- Manage Flights --------</div>
+
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <button class="btn btn-refresh" onclick="loadFlights()">Refresh</button>
+          <span class="filter-label">Show:</span>
+          <button class="btn btn-filter" id="statusFilterBtn" onclick="toggleFilter()">
+            Active
+          </button>
+        </div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Opt</th>
+            <th>Flight ID</th>
+            <th>Origin</th>
+            <th>Destination</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+
+        <tbody id="flightTable"></tbody>
+      </table>
+
+      <div class="actions">
+        <button class="btn btn-exit" onclick="goBack()">Exit</button>
+      </div>
+    </div>
+
+    <div class="modal" id="viewModal">
+      <div class="modal-box">
+        <div class="modal-title">Flight Details</div>
+        <div class="detail-grid" id="viewDetails"></div>
+        <div class="modal-actions">
+          <button class="btn btn-exit" onclick="closeViewModal()">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal" id="editModal">
+      <div class="modal-box">
+        <div class="modal-title">Edit Flight</div>
+        <div class="edit-grid">
+          <div>
+            <label for="editFlightId">Flight ID</label>
+            <input id="editFlightId" readonly />
+          </div>
+          <div>
+            <label for="editAirModel">Aircraft Model</label>
+            <input id="editAirModel" />
+          </div>
+          <div>
+            <label for="editOrigin">Origin</label>
+            <input id="editOrigin" />
+          </div>
+          <div>
+            <label for="editDest">Destination</label>
+            <input id="editDest" />
+          </div>
+          <div>
+            <label for="editRange">Range</label>
+            <input id="editRange" type="number" />
+          </div>
+          <div>
+            <label for="editSeats">Total Seats</label>
+            <input id="editSeats" type="number" />
+          </div>
+          <div>
+            <label for="editFuelCap">Fuel Capacity</label>
+            <input id="editFuelCap" type="number" />
+          </div>
+          <div>
+            <label for="editPrice">Ticket Price</label>
+            <input id="editPrice" type="number" />
+          </div>
+          <div>
+            <label for="editDepDate">Departure Date</label>
+            <input id="editDepDate" type="date" />
+          </div>
+          <div>
+            <label for="editDepTime">Departure Time</label>
+            <input id="editDepTime" type="time" />
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-exit" onclick="closeEditModal()">Cancel</button>
+          <button class="btn btn-edit" onclick="saveFlightEdits()">Save</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const BASE_URL = "http://localhost:8080";
+      const airId = localStorage.getItem("userId");
+      const STATUS_MAP = {
+        Active: "A",
+        Inactive: "I",
+      };
+
+      let currentFilter = "Active";
+      let airlineFlights = [];
+      let selectedFlight = null;
+
+      function getStatusLabel(status) {
+        return status === "A" ? "Active" : "Inactive";
+      }
+
+      function updateFilterButton() {
+        document.getElementById("statusFilterBtn").innerText = currentFilter;
+      }
+
+      function renderFlights() {
+        const flightTable = document.getElementById("flightTable");
+        const filteredFlights = airlineFlights.filter(
+          (flight) => flight.fltStatus === STATUS_MAP[currentFilter]
+        );
+
+        if (filteredFlights.length === 0) {
+          flightTable.innerHTML = `
+            <tr>
+              <td colspan="6" class="empty-state">
+                No ${currentFilter.toLowerCase()} flights found.
+              </td>
+            </tr>
+          `;
+          return;
+        }
+
+        flightTable.innerHTML = filteredFlights
+          .map(
+            (flight, index) => `
+              <tr>
+                <td>${index + 1}</td>
+                <td>${flight.fltId || ""}</td>
+                <td>${flight.fltOrigin || ""}</td>
+                <td>${flight.fltDest || ""}</td>
+                <td>${getStatusLabel(flight.fltStatus)}</td>
+                <td>
+                  <div class="row-actions">
+                    <button class="btn btn-view" onclick="viewFlight('${flight.fltId}')">
+                      View
+                    </button>
+                    <button class="btn btn-edit" onclick="editFlight('${flight.fltId}')">
+                      Edit
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            `
+          )
+          .join("");
+      }
+
+      function loadFlights() {
+        fetch(`${BASE_URL}/api/flights`)
+          .then((res) => res.json())
+          .then((data) => {
+            airlineFlights = data.filter((flight) => flight.airId === airId);
+            renderFlights();
+          })
+          .catch(() => {
+            document.getElementById("flightTable").innerHTML = `
+              <tr>
+                <td colspan="6" class="empty-state">Unable to load flights.</td>
+              </tr>
+            `;
+          });
+      }
+
+      function toggleFilter() {
+        currentFilter = currentFilter === "Active" ? "Inactive" : "Active";
+        updateFilterButton();
+        renderFlights();
+      }
+
+      function getFlightById(fltId) {
+        return airlineFlights.find((flight) => flight.fltId === fltId);
+      }
+
+      function viewFlight(fltId) {
+        const flight = getFlightById(fltId);
+        if (!flight) {
+          return;
+        }
+
+        document.getElementById("viewDetails").innerHTML = `
+          <div class="detail-item"><strong>Flight ID</strong>${flight.fltId || ""}</div>
+          <div class="detail-item"><strong>Aircraft Model</strong>${flight.airModel || ""}</div>
+          <div class="detail-item"><strong>Origin</strong>${flight.fltOrigin || ""}</div>
+          <div class="detail-item"><strong>Destination</strong>${flight.fltDest || ""}</div>
+          <div class="detail-item"><strong>Range</strong>${flight.fltRange || ""}</div>
+          <div class="detail-item"><strong>Total Seats</strong>${flight.fltTotSeat || ""}</div>
+          <div class="detail-item"><strong>Fuel Capacity</strong>${flight.fltFuelCap || ""}</div>
+          <div class="detail-item"><strong>Ticket Price</strong>${flight.fltTkPrice || ""}</div>
+          <div class="detail-item"><strong>Departure Date</strong>${flight.fltDepDate || ""}</div>
+          <div class="detail-item"><strong>Departure Time</strong>${flight.fltDepTime || ""}</div>
+          <div class="detail-item"><strong>Status</strong>${getStatusLabel(flight.fltStatus)}</div>
+        `;
+
+        document.getElementById("viewModal").classList.add("show");
+      }
+
+      function closeViewModal() {
+        document.getElementById("viewModal").classList.remove("show");
+      }
+
+      function editFlight(fltId) {
+        selectedFlight = getFlightById(fltId);
+        if (!selectedFlight) {
+          return;
+        }
+
+        document.getElementById("editFlightId").value = selectedFlight.fltId || "";
+        document.getElementById("editAirModel").value = selectedFlight.airModel || "";
+        document.getElementById("editOrigin").value = selectedFlight.fltOrigin || "";
+        document.getElementById("editDest").value = selectedFlight.fltDest || "";
+        document.getElementById("editRange").value = selectedFlight.fltRange || "";
+        document.getElementById("editSeats").value = selectedFlight.fltTotSeat || "";
+        document.getElementById("editFuelCap").value = selectedFlight.fltFuelCap || "";
+        document.getElementById("editPrice").value = selectedFlight.fltTkPrice || "";
+        document.getElementById("editDepDate").value = selectedFlight.fltDepDate || "";
+        document.getElementById("editDepTime").value = selectedFlight.fltDepTime || "";
+
+        document.getElementById("editModal").classList.add("show");
+      }
+
+      function closeEditModal() {
+        selectedFlight = null;
+        document.getElementById("editModal").classList.remove("show");
+      }
+
+      function saveFlightEdits() {
+        if (!selectedFlight) {
+          return;
+        }
+
+        const updatedFlight = {
+          ...selectedFlight,
+          airModel: document.getElementById("editAirModel").value,
+          fltOrigin: document.getElementById("editOrigin").value,
+          fltDest: document.getElementById("editDest").value,
+          fltRange: document.getElementById("editRange").value,
+          fltTotSeat: document.getElementById("editSeats").value,
+          fltFuelCap: document.getElementById("editFuelCap").value,
+          fltTkPrice: document.getElementById("editPrice").value,
+          fltDepDate: document.getElementById("editDepDate").value,
+          fltDepTime: document.getElementById("editDepTime").value,
+        };
+
+        fetch(`${BASE_URL}/api/flights/${selectedFlight.fltId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(updatedFlight),
+        })
+          .then((res) => {
+            if (!res.ok) {
+              throw new Error("Update failed");
+            }
+
+            alert("Flight updated successfully");
+            closeEditModal();
+            loadFlights();
+          })
+          .catch(() => {
+            alert("Unable to update flight");
+          });
+      }
+
+      function goBack() {
+        window.location.href = "airline-dashboard.html";
+      }
+
+      function logout() {
+        localStorage.clear();
+        window.location.href = "../login.html";
+      }
+
+      updateFilterButton();
+      loadFlights();
+    </script>
+  </body>
+</html>

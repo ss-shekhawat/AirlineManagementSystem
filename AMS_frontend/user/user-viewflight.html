@@ -1,0 +1,159 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Display Flight</title>
+    <link rel="stylesheet" href="../css/style.css" />
+
+    <style>
+      .admin-header {
+        background: linear-gradient(90deg, #0d6efd, #084298);
+        color: white;
+        padding: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .box {
+        background: white;
+        margin: 30px;
+        padding: 25px;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      }
+
+      .title {
+        text-align: center;
+        font-weight: bold;
+        border-bottom: 2px dashed #999;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+      }
+
+      .detail-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 18px 28px;
+      }
+
+      .detail-item {
+        background: #f8f9fa;
+        padding: 14px;
+        border-radius: 8px;
+      }
+
+      .detail-item strong {
+        display: inline-block;
+        min-width: 140px;
+      }
+
+      .detail-item.full-width {
+        grid-column: 1 / -1;
+      }
+
+      .actions {
+        text-align: center;
+        margin-top: 30px;
+      }
+
+      .btn {
+        padding: 10px 20px;
+        margin: 10px;
+        border: none;
+        cursor: pointer;
+        border-radius: 6px;
+        font-weight: bold;
+      }
+
+      .btn-book {
+        background: #0d6efd;
+        color: white;
+      }
+
+      .btn-exit {
+        background: gray;
+        color: white;
+      }
+
+      @media (max-width: 700px) {
+        .detail-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <header class="admin-header">
+      <h2>Display Flight</h2>
+      <button onclick="logout()">Logout</button>
+    </header>
+
+    <div class="box">
+      <div class="title">-------- Display Flight --------</div>
+
+      <div class="detail-grid" id="flightDetails"></div>
+
+      <div class="actions">
+        <button class="btn btn-book" onclick="bookFlight()">Book Flight</button>
+        <button class="btn btn-exit" onclick="goBack()">Exit</button>
+      </div>
+    </div>
+
+    <script>
+      function getSelectedFlight() {
+        try {
+          return JSON.parse(localStorage.getItem("selectedFlight") || "{}");
+        } catch {
+          return {};
+        }
+      }
+
+      function getValue(obj, keys, fallback = "") {
+        for (const key of keys) {
+          const value = obj?.[key];
+          if (value !== undefined && value !== null && value !== "") {
+            return value;
+          }
+        }
+        return fallback;
+      }
+
+      function loadFlight() {
+        const flight = getSelectedFlight();
+        document.getElementById("flightDetails").innerHTML = `
+          <div class="detail-item"><strong>Flight ID:</strong> ${getValue(flight, ["fltId", "flightId"], "-")}</div>
+          <div class="detail-item"><strong>Airline:</strong> ${getValue(flight, ["airName", "airlineName", "airId"], "-")}</div>
+          <div class="detail-item"><strong>Origin:</strong> ${getValue(flight, ["fltOrigin", "origin"], "-")}</div>
+          <div class="detail-item"><strong>Destination:</strong> ${getValue(flight, ["fltDest", "destination"], "-")}</div>
+          <div class="detail-item"><strong>Aircraft:</strong> ${getValue(flight, ["airModel", "aircraft"], "-")}</div>
+          <div class="detail-item"><strong>Available Seats:</strong> ${getValue(flight, ["fltAvailSeat", "availableSeats", "fltTotSeat"], "-")}</div>
+          <div class="detail-item"><strong>Arrival Time:</strong> ${getValue(flight, ["fltArrTime", "arrivalTime"], "13:30:00")}</div>
+          <div class="detail-item"><strong>Departure Time:</strong> ${getValue(flight, ["fltDepTime", "departureTime"], "-")}</div>
+          <div class="detail-item"><strong>Departure Date:</strong> ${getValue(flight, ["fltDepDate", "departureDate"], "-")}</div>
+          <div class="detail-item"><strong>End Time:</strong> ${getValue(flight, ["fltEndTime", "endTime"], "15:00:00")}</div>
+          <div class="detail-item"><strong>Rating:</strong> ${getValue(flight, ["rating", "fltRating"], "4.5")}</div>
+          <div class="detail-item"><strong>Price:</strong> ${getValue(flight, ["fltTkPrice", "ticketPrice"], "-")}</div>
+          <div class="detail-item"><strong>Cabin Bag:</strong> ${getValue(flight, ["cabinBag"], "3 Kg")}</div>
+          <div class="detail-item"><strong>Main Luggage:</strong> ${getValue(flight, ["mainLuggage"], "8 Kg")}</div>
+          <div class="detail-item full-width"><strong>Total Duration:</strong> ${getValue(flight, ["fltDuration", "duration"], "01:30:00 Hr")}</div>
+        `;
+      }
+
+      function bookFlight() {
+        window.location.href = "user-bookticket.html";
+      }
+
+      function goBack() {
+        window.location.href = "user-searchedflights.html";
+      }
+
+      function logout() {
+        localStorage.clear();
+        window.location.href = "../login.html";
+      }
+
+      loadFlight();
+    </script>
+  </body>
+</html>

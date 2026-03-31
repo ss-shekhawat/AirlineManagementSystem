@@ -1,0 +1,202 @@
+<!doctype html>
+<html>
+  <head>
+    <title>User Profile</title>
+    <link rel="stylesheet" href="../css/style.css" />
+
+    <style>
+      .admin-header {
+        background: linear-gradient(90deg, #0d6efd, #084298);
+        color: white;
+        padding: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .profile-box {
+        background: white;
+        padding: 30px;
+        border-radius: 12px;
+        margin: 30px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      }
+
+      .profile-title {
+        text-align: center;
+        margin-bottom: 20px;
+        font-size: 22px;
+        font-weight: bold;
+        border-bottom: 2px solid #ddd;
+        padding-bottom: 10px;
+      }
+
+      .profile-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      }
+
+      .field {
+        font-size: 16px;
+      }
+
+      .field.full-width {
+        grid-column: 1 / -1;
+      }
+
+      .label {
+        font-weight: bold;
+        color: #333;
+      }
+
+      .actions {
+        text-align: center;
+        margin-top: 30px;
+      }
+
+      .btn {
+        padding: 10px 20px;
+        margin: 10px;
+        border: none;
+        cursor: pointer;
+        border-radius: 6px;
+        font-weight: bold;
+      }
+
+      .btn-update {
+        background: #0d6efd;
+        color: white;
+      }
+
+      .btn-exit {
+        background: gray;
+        color: white;
+      }
+
+      @media (max-width: 700px) {
+        .profile-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <header class="admin-header">
+      <h2>View Profile</h2>
+      <button onclick="logout()">Logout</button>
+    </header>
+
+    <div class="profile-box">
+      <div class="profile-title">View Profile</div>
+
+      <div class="profile-grid">
+        <div class="field">
+          <span class="label">User ID:</span> <span id="usrId"></span>
+        </div>
+        <div class="field">
+          <span class="label">DOB:</span> <span id="usrDob"></span>
+        </div>
+
+        <div class="field">
+          <span class="label">Name:</span> <span id="usrName"></span>
+        </div>
+        <div class="field">
+          <span class="label">Aadhar:</span> <span id="usrAadhar"></span>
+        </div>
+
+        <div class="field">
+          <span class="label">Mobile:</span> <span id="usrMobile"></span>
+        </div>
+        <div class="field">
+          <span class="label">Gender:</span> <span id="usrGender"></span>
+        </div>
+
+        <div class="field">
+          <span class="label">Email:</span> <span id="usrEmail"></span>
+        </div>
+        <div class="field">
+          <span class="label">Pincode:</span> <span id="usrPincode"></span>
+        </div>
+
+        <div class="field">
+          <span class="label">City:</span> <span id="usrCity"></span>
+        </div>
+        <div class="field">
+          <span class="label">State:</span> <span id="usrState"></span>
+        </div>
+
+        <div class="field full-width">
+          <span class="label">Address:</span> <span id="usrAddress"></span>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-update" onclick="goToUpdate()">Update</button>
+        <button class="btn btn-exit" onclick="goBack()">Exit</button>
+      </div>
+    </div>
+
+    <script>
+      const BASE_URL = "http://localhost:8080";
+      const userId = localStorage.getItem("userId");
+
+      function getValue(obj, keys, fallback = "") {
+        for (const key of keys) {
+          const value = obj?.[key];
+          if (value !== undefined && value !== null && value !== "") {
+            return value;
+          }
+        }
+        return fallback;
+      }
+
+      function fillProfile(user) {
+        document.getElementById("usrId").innerText = getValue(user, ["usrId", "userId"], userId || "-");
+        document.getElementById("usrName").innerText = getValue(user, ["usrName", "userName", "name"], "-");
+        document.getElementById("usrDob").innerText = getValue(user, ["usrDob", "dob", "dateOfBirth"], "-");
+        document.getElementById("usrMobile").innerText = getValue(user, ["usrMobile", "mobile", "usrMobNum"], "-");
+        document.getElementById("usrAadhar").innerText = getValue(user, ["usrAadhar", "aadhar", "aadhaar"], "-");
+        document.getElementById("usrEmail").innerText = getValue(user, ["usrEmail", "email"], "-");
+        document.getElementById("usrGender").innerText = getValue(user, ["usrGender", "gender"], "-");
+        document.getElementById("usrCity").innerText = getValue(user, ["usrCity", "city"], "-");
+        document.getElementById("usrPincode").innerText = getValue(user, ["usrPincode", "pinCode", "pincode"], "-");
+        document.getElementById("usrState").innerText = getValue(user, ["usrState", "state"], "-");
+        document.getElementById("usrAddress").innerText = getValue(user, ["usrAddress", "address"], "-");
+      }
+
+      function loadProfile() {
+        Promise.allSettled([
+          fetch(`${BASE_URL}/api/users`).then((res) => res.json()),
+          fetch(`${BASE_URL}/api/customers`).then((res) => res.json()),
+        ]).then((results) => {
+          const collections = results
+            .filter((result) => result.status === "fulfilled" && Array.isArray(result.value))
+            .flatMap((result) => result.value);
+
+          const user =
+            collections.find((item) => getValue(item, ["usrId", "userId"]) === userId) || {};
+
+          localStorage.setItem("selectedUserProfile", JSON.stringify(user));
+          fillProfile(user);
+        });
+      }
+
+      function goToUpdate() {
+        window.location.href = "user-updateprofile.html";
+      }
+
+      function goBack() {
+        window.location.href = "user-dashboard.html";
+      }
+
+      function logout() {
+        localStorage.clear();
+        window.location.href = "../login.html";
+      }
+
+      loadProfile();
+    </script>
+  </body>
+</html>

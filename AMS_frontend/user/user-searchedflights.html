@@ -1,0 +1,250 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Searched Flights</title>
+    <link rel="stylesheet" href="../css/style.css" />
+
+    <style>
+      .admin-header {
+        background: linear-gradient(90deg, #0d6efd, #084298);
+        color: white;
+        padding: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .box {
+        background: white;
+        margin: 30px;
+        padding: 25px;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      }
+
+      .title {
+        text-align: center;
+        font-weight: bold;
+        border-bottom: 2px dashed #999;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+      }
+
+      .route-summary {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-bottom: 20px;
+      }
+
+      .summary-item {
+        background: #f8f9fa;
+        padding: 12px;
+        border-radius: 8px;
+      }
+
+      .summary-item strong {
+        display: inline-block;
+        min-width: 120px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      th,
+      td {
+        padding: 10px;
+        text-align: center;
+        border-bottom: 1px solid #ddd;
+      }
+
+      th {
+        background: #0d6efd;
+        color: white;
+      }
+
+      .btn {
+        padding: 10px 20px;
+        margin: 10px;
+        border: none;
+        cursor: pointer;
+        border-radius: 6px;
+        font-weight: bold;
+      }
+
+      .btn-refresh {
+        background: green;
+        color: white;
+      }
+
+      .btn-view {
+        background: #0d6efd;
+        color: white;
+      }
+
+      .btn-exit {
+        background: gray;
+        color: white;
+      }
+
+      .actions {
+        text-align: center;
+        margin-top: 20px;
+      }
+
+      .empty-state {
+        padding: 20px;
+        color: #666;
+        font-weight: bold;
+      }
+
+      @media (max-width: 700px) {
+        .route-summary {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <header class="admin-header">
+      <h2>Searched Flights</h2>
+      <button onclick="logout()">Logout</button>
+    </header>
+
+    <div class="box">
+      <div class="title">-------- Searched Flights --------</div>
+
+      <div class="route-summary">
+        <div class="summary-item"><strong>Origin:</strong> <span id="searchOrigin">-</span></div>
+        <div class="summary-item"><strong>Destination:</strong> <span id="searchDestination">-</span></div>
+      </div>
+
+      <button class="btn btn-refresh" onclick="loadFlights()">Refresh</button>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Opt</th>
+            <th>Flight ID</th>
+            <th>Airline</th>
+            <th>Total Duration</th>
+            <th>Price</th>
+            <th>Rating</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="flightTable"></tbody>
+      </table>
+
+      <div class="actions">
+        <button class="btn btn-exit" onclick="goBack()">Exit</button>
+      </div>
+    </div>
+
+    <script>
+      const BASE_URL = "http://localhost:8080";
+
+      function getSearchData() {
+        try {
+          return JSON.parse(localStorage.getItem("userFlightSearch") || "{}");
+        } catch {
+          return {};
+        }
+      }
+
+      function getValue(obj, keys, fallback = "") {
+        for (const key of keys) {
+          const value = obj?.[key];
+          if (value !== undefined && value !== null && value !== "") {
+            return value;
+          }
+        }
+        return fallback;
+      }
+
+      function loadFlights() {
+        const searchData = getSearchData();
+        const origin = searchData.origin || "";
+        const destination = searchData.destination || "";
+        const departureDate = searchData.departureDate || "";
+
+        document.getElementById("searchOrigin").innerText = origin || "-";
+        document.getElementById("searchDestination").innerText = destination || "-";
+
+        fetch(`${BASE_URL}/api/flights/search?origin=${encodeURIComponent(origin)}&dest=${encodeURIComponent(destination)}`)
+          .then((res) => res.json())
+          .then((data) => {
+            const filteredFlights = data.filter((flight) => {
+              if (!departureDate) {
+                return true;
+              }
+              return getValue(flight, ["fltDepDate", "departureDate"], "") === departureDate;
+            });
+
+            if (filteredFlights.length === 0) {
+              document.getElementById("flightTable").innerHTML = `
+                <tr>
+                  <td colspan="7" class="empty-state">No flights found for this search.</td>
+                </tr>
+              `;
+              return;
+            }
+
+            document.getElementById("flightTable").innerHTML = filteredFlights
+              .map(
+                (flight, index) => `
+                  <tr>
+                    <td>${index + 1}</td>
+                    <td>${getValue(flight, ["fltId", "flightId"], "-")}</td>
+                    <td>${getValue(flight, ["airName", "airlineName", "airId"], "-")}</td>
+                    <td>${getValue(flight, ["fltDuration", "duration"], "01:30:00")}</td>
+                    <td>${getValue(flight, ["fltTkPrice", "ticketPrice"], "-")}</td>
+                    <td>${getValue(flight, ["rating", "fltRating"], "4.5")}</td>
+                    <td>
+                      <button class="btn btn-view" onclick="viewFlight(${index})">View</button>
+                    </td>
+                  </tr>
+                `
+              )
+              .join("");
+
+            localStorage.setItem("searchedFlights", JSON.stringify(filteredFlights));
+          })
+          .catch(() => {
+            document.getElementById("flightTable").innerHTML = `
+              <tr>
+                <td colspan="7" class="empty-state">Unable to load flights.</td>
+              </tr>
+            `;
+          });
+      }
+
+      function viewFlight(index) {
+        try {
+          const flights = JSON.parse(localStorage.getItem("searchedFlights") || "[]");
+          const selectedFlight = flights[index];
+          if (!selectedFlight) {
+            return;
+          }
+
+          localStorage.setItem("selectedFlight", JSON.stringify(selectedFlight));
+          window.location.href = "user-viewflight.html";
+        } catch {}
+      }
+
+      function goBack() {
+        window.location.href = "user-searchflights.html";
+      }
+
+      function logout() {
+        localStorage.clear();
+        window.location.href = "../login.html";
+      }
+
+      loadFlights();
+    </script>
+  </body>
+</html>

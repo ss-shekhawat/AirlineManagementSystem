@@ -1,0 +1,269 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Manage Airlines</title>
+    <link rel="stylesheet" href="../css/style.css" />
+
+    <style>
+      .admin-header {
+        background: linear-gradient(90deg, #0d6efd, #084298);
+        color: white;
+        padding: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .box {
+        background: white;
+        margin: 30px;
+        padding: 25px;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      }
+
+      .title {
+        text-align: center;
+        font-weight: bold;
+        border-bottom: 2px dashed #999;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+      }
+
+      .toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 15px;
+        flex-wrap: wrap;
+      }
+
+      .toolbar-left {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+
+      .filter-label {
+        font-weight: bold;
+        color: #333;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      th,
+      td {
+        padding: 10px;
+        text-align: center;
+        border-bottom: 1px solid #ddd;
+      }
+
+      th {
+        background: #0d6efd;
+        color: white;
+      }
+
+      tr:hover {
+        background: #f1f1f1;
+      }
+
+      .btn {
+        padding: 8px 14px;
+        border: none;
+        cursor: pointer;
+        border-radius: 5px;
+        font-size: 12px;
+        font-weight: bold;
+      }
+
+      .btn-refresh {
+        background: green;
+        color: white;
+      }
+
+      .btn-filter {
+        background: orange;
+        color: white;
+      }
+
+      .btn-add {
+        background: #0d6efd;
+        color: white;
+      }
+
+      .btn-exit {
+        background: gray;
+        color: white;
+      }
+
+      .actions {
+        text-align: center;
+        margin-top: 20px;
+      }
+
+      .empty-state {
+        padding: 20px;
+        color: #666;
+        font-weight: bold;
+      }
+
+      @media (max-width: 700px) {
+        .toolbar {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <header class="admin-header">
+      <h2>Manage Airlines</h2>
+      <button onclick="logout()">Logout</button>
+    </header>
+
+    <div class="box">
+      <div class="title">-------- Manage Airlines --------</div>
+
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <button class="btn btn-refresh" onclick="loadAirlines()">Refresh</button>
+          <span class="filter-label">Show:</span>
+          <button class="btn btn-filter" id="statusFilterBtn" onclick="toggleFilter()">
+            Active
+          </button>
+          <button class="btn btn-add" onclick="goToAddAirline()">Add New Airline</button>
+        </div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Opt</th>
+            <th>Airline ID</th>
+            <th>Name</th>
+            <th>Fleet Size</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="airlineTable"></tbody>
+      </table>
+
+      <div class="actions">
+        <button class="btn btn-exit" onclick="goBack()">Exit</button>
+      </div>
+    </div>
+
+    <script>
+      const BASE_URL = "http://localhost:8080";
+      const FILTERS = ["Active", "Inactive"];
+
+      let currentFilterIndex = 0;
+      let airlines = [];
+
+      function getValue(obj, keys, fallback = "") {
+        for (const key of keys) {
+          const value = obj?.[key];
+          if (value !== undefined && value !== null && value !== "") {
+            return value;
+          }
+        }
+        return fallback;
+      }
+
+      function normalizeStatus(status) {
+        const value = String(status || "").trim().toLowerCase();
+
+        if (value === "active" || value === "a") {
+          return "Active";
+        }
+        if (value === "inactive" || value === "i") {
+          return "Inactive";
+        }
+
+        return "Active";
+      }
+
+      function updateFilterButton() {
+        document.getElementById("statusFilterBtn").innerText = FILTERS[currentFilterIndex];
+      }
+
+      function renderAirlines() {
+        const currentFilter = FILTERS[currentFilterIndex];
+        const filteredAirlines = airlines.filter((airline) => airline.displayStatus === currentFilter);
+
+        if (filteredAirlines.length === 0) {
+          document.getElementById("airlineTable").innerHTML = `
+            <tr>
+              <td colspan="5" class="empty-state">No ${currentFilter.toLowerCase()} airlines found.</td>
+            </tr>
+          `;
+          return;
+        }
+
+        document.getElementById("airlineTable").innerHTML = filteredAirlines
+          .map(
+            (airline, index) => `
+              <tr>
+                <td>${index + 1}</td>
+                <td>${airline.airId}</td>
+                <td>${airline.airName}</td>
+                <td>${airline.airFleet}</td>
+                <td>${airline.displayStatus}</td>
+              </tr>
+            `
+          )
+          .join("");
+      }
+
+      function loadAirlines() {
+        fetch(`${BASE_URL}/api/airlines`)
+          .then((res) => res.json())
+          .then((data) => {
+            airlines = data.map((airline) => ({
+              airId: getValue(airline, ["airId"], "-"),
+              airName: getValue(airline, ["airName"], "-"),
+              airFleet: getValue(airline, ["airFleet", "fleetSize"], "-"),
+              displayStatus: normalizeStatus(getValue(airline, ["airStatus", "status"], "Active")),
+            }));
+
+            renderAirlines();
+          })
+          .catch(() => {
+            document.getElementById("airlineTable").innerHTML = `
+              <tr>
+                <td colspan="5" class="empty-state">Unable to load airlines.</td>
+              </tr>
+            `;
+          });
+      }
+
+      function toggleFilter() {
+        currentFilterIndex = (currentFilterIndex + 1) % FILTERS.length;
+        updateFilterButton();
+        renderAirlines();
+      }
+
+      function goToAddAirline() {
+        window.location.href = "admin-add-airline.html";
+      }
+
+      function goBack() {
+        window.location.href = "admin-dashboard.html";
+      }
+
+      function logout() {
+        localStorage.clear();
+        window.location.href = "../login.html";
+      }
+
+      updateFilterButton();
+      loadAirlines();
+    </script>
+  </body>
+</html>

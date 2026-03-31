@@ -1,0 +1,49 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Manage Bookings</title>
+    <link rel="stylesheet" href="../css/style.css" />
+
+    <style>
+      .admin-header {
+        background: linear-gradient(90deg, #0d6efd, #084298);
+        color: white;
+        padding: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .box {
+        background: white;
+        margin: 30px;
+        padding: 25px;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="admin-header">
+      <h2>Manage Bookings</h2>
+      <button onclick="logout()">Logout</button>
+    </header>
+
+    <div class="box">
+      <h3>Manage Bookings page is the next step.</h3>
+      <button onclick="goBack()">Exit</button>
+    </div>
+
+    <script>
+      function goBack() {
+        window.location.href = "user-dashboard.html";
+      }
+
+      function logout() {
+        localStorage.clear();
+        window.location.href = "../login.html";
+      }
+    </script>
+  </body>
+</html>

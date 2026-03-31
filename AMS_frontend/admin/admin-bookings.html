@@ -1,0 +1,35 @@
+<!doctype html>
+<html>
+  <head>
+    <title>View Bookings</title>
+    <link rel="stylesheet" href="../css/style.css" />
+    <link rel="stylesheet" href="../css/admin-layout.css" />
+  </head>
+  <body>
+    <header class="admin-header">
+      <h2>All Bookings</h2>
+      <button onclick="logout()">Logout</button>
+    </header>
+
+    <div class="dashboard-container">
+      <button onclick="loadBookings()">Load Bookings</button>
+    </div>
+
+    <div id="bookingList"></div>
+
+    <script src="../js/admin-layout.js"></script>
+    <script>
+      function loadBookings() {
+        fetch("http://localhost:8080/api/bookings")
+          .then((res) => res.json())
+          .then((data) => {
+            let html = "<h3>Booking List</h3>";
+            data.forEach((b) => {
+              html += `<p>${b.bkId} - ${b.usrId} - ${b.fltId}</p>`;
+            });
+            document.getElementById("bookingList").innerHTML = html;
+          });
+      }
+    </script>
+  </body>
+</html>
